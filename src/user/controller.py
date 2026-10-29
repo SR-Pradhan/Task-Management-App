@@ -7,6 +7,7 @@ import jwt
 from src.utills.settings import settings
 from datetime import datetime, timedelta
 from jwt.exceptions import InvalidTokenError
+from src.utills.mail import send_emails
 
 
 password_hash = PasswordHash.recommended()
@@ -18,7 +19,7 @@ def verify_password(plain_password, hashed_password):
     return password_hash.verify(plain_password, hashed_password)
 
 
-def register(body:UserSchema, db:Session):
+async def register(body:UserSchema, db:Session, ):
     is_user = db.query(UserModel).filter(UserModel.username == body.username).first()
     if is_user:
         raise HTTPException(400, detail = "User already exist...")
@@ -40,7 +41,10 @@ def register(body:UserSchema, db:Session):
     db.commit()
     db.refresh(new_user)
 
-    
+    # send email confirmation
+    res =  await send_emails([new_user.email])
+    print(res)
+
     return new_user
 
 def login_user(body:UserLoginSchema, db:Session):
