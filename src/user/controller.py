@@ -51,7 +51,7 @@ def login_user(body:UserLoginSchema, db:Session):
     if not verify_password(body.password, user.hash_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You have enter wrong password")
 
-    exp_time = datetime.now() + timedelta(seconds=20)
+    exp_time = datetime.now() + timedelta(minutes=settings.EXPIRES_IN_MINUTES)
 
     token  = jwt.encode({"_id":user.id, "exp":exp_time.timestamp()},settings.SECRET_KEY, settings.ALGORITHM)
 
@@ -72,7 +72,6 @@ def is_authenticated(request:Request, db:Session):
         user = db.query(UserModel).filter(UserModel.id == user_id).first()
         if not user:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are unauthoriased")
-        
 
         return user
     except InvalidTokenError:
